@@ -8,71 +8,112 @@ class AIAssistant:
     def __init__(self):
         self.client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
     
-    def get_prompt(self, service_type, user_input):
-        prompts = {
-            'analysis': f"""
-                Veri analisti olarak aşağıdaki konuyu detaylı analiz et:
-                
-                KONU: {user_input}
-                
-                Lütfen şu başlıklar altında analiz yap:
-                
-                # ÖZET ANALİZ
-                # TEMEL BULGULAR
-                # ÖNERİLER
-                # SONUÇ
-            """,
+  def get_prompt(self, service_type, user_input):
+    prompts = {
+        'symptom_analysis': f"""
+            Bir doktor asistanı olarak aşağıdaki semptomları değerlendir:
             
-            'writing': f"""
-                İçerik yazarı olarak aşağıdaki konuda profesyonel bir metin oluştur:
-                
-                KONU: {user_input}
-                
-                Lütfen şu özelliklere dikkat et:
-                - SEO uyumlu
-                - Akıcı anlatım
-                - Özgün içerik
-                - Dikkat çekici başlıklar
-            """,
+            SEMPTOMLAR: {user_input}
             
-            'coding': f"""
-                Yazılım geliştirici olarak aşağıdaki problemi çöz:
-                
-                PROBLEM: {user_input}
-                
-                Lütfen şunları sağla:
-                # ÇÖZÜM AÇIKLAMASI
-                # KOD ÖRNEĞİ
-                # KULLANIM KILAVUZU
-                # NOTLAR
-            """,
+            Lütfen şu başlıklar altında analiz yap:
             
-            'translation': f"""
-                Profesyonel çevirmen olarak aşağıdaki metni çevir:
-                
-                METİN: {user_input}
-                
-                Lütfen şunlara dikkat et:
-                - Kültürel uyarlamalar
-                - Deyimsel karşılıklar
-                - Profesyonel terminoloji
-                - Akıcı anlatım
-            """,
+            # İLK DEĞERLENDİRME
+            [Semptomların detaylı analizi]
             
-            'research': f"""
-                Araştırmacı olarak aşağıdaki konuyu detaylı incele:
-                
-                KONU: {user_input}
-                
-                Lütfen şu başlıklar altında raporla:
-                # MEVCUT DURUM
-                # ARAŞTIRMA BULGULARI
-                # KARŞILAŞTIRMALI ANALİZ
-                # SONUÇ VE ÖNERİLER
-            """
-        }
-        return prompts.get(service_type, f"Uzman olarak şu konuyu değerlendir: {user_input}")
-
+            # OLASI DURUMLAR
+            [Göz önünde bulundurulması gereken durumlar]
+            
+            # ÖNERİLER
+            * İlk yapılması gerekenler
+            * Yaşam tarzı önerileri
+            * Dikkat edilmesi gerekenler
+            
+            # ACİLİYET DURUMU
+            [Durumun aciliyeti ve hastaneye gitme gerekliliği]
+            
+            # UZMAN YÖNLENDİRMESİ
+            [Hangi uzmana başvurulmalı]
+        """,
+        
+        'mental_health': f"""
+            Bir psikolojik danışman olarak aşağıdaki durumu değerlendir:
+            
+            DURUM: {user_input}
+            
+            # DURUM ANALİZİ
+            [Psikolojik durumun değerlendirmesi]
+            
+            # BAŞA ÇIKMA STRATEJİLERİ
+            * Önerilen teknikler
+            * Günlük uygulamalar
+            * Yaşam tarzı değişiklikleri
+            
+            # PROFESYONEL DESTEK
+            [Uzman desteği gerekli mi?]
+            
+            # SONRAKİ ADIMLAR
+            [Atılması gereken adımlar]
+        """,
+        
+        'nutrition': f"""
+            Bir beslenme uzmanı olarak aşağıdaki durumu değerlendir:
+            
+            DURUM: {user_input}
+            
+            # BESLENME ANALİZİ
+            [Mevcut durumun değerlendirmesi]
+            
+            # ÖNERİLER
+            * Besin grupları
+            * Öğün düzeni
+            * Dikkat edilecekler
+            
+            # HEDEFLER
+            [Beslenme hedefleri]
+            
+            # TAKİP PLANI
+            [Önerilen takip süreci]
+        """,
+        
+        'medical_research': f"""
+            Bir sağlık araştırmacısı olarak şu konuyu incele:
+            
+            KONU: {user_input}
+            
+            # GÜNCEL BİLGİLER
+            [Konu hakkında güncel bilgiler]
+            
+            # BİLİMSEL VERİLER
+            [Araştırma sonuçları]
+            
+            # TEDAVİ YÖNTEMLERİ
+            [Mevcut tedavi yaklaşımları]
+            
+            # YENİ GELİŞMELER
+            [Alandaki son gelişmeler]
+        """,
+        
+        'health_tips': f"""
+            Bir sağlık danışmanı olarak şu konuda öneriler sun:
+            
+            KONU: {user_input}
+            
+            # GENEL BİLGİLER
+            [Konu hakkında temel bilgiler]
+            
+            # SAĞLIKLI YAŞAM ÖNERİLERİ
+            * Günlük alışkanlıklar
+            * Egzersiz önerileri
+            * Beslenme tavsiyeleri
+            
+            # KORUYUCU ÖNLEMLER
+            [Hastalıklardan korunma yöntemleri]
+            
+            # YAŞAM KALİTESİ
+            [Yaşam kalitesini artırıcı öneriler]
+        """
+    }
+    return prompts.get(service_type, f"Sağlık danışmanı olarak şu konuyu değerlendir: {user_input}")
     def generate_response(self, service_type, user_input):
         try:
             prompt = self.get_prompt(service_type, user_input)
