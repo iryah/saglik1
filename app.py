@@ -1,12 +1,43 @@
 class AIAssistant:
     def __init__(self):
         self.client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+class AIAssistant:
+    def __init__(self):
+        self.client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
     
     def format_response(self, response):
-        # ContentBlock ve text metinlerini temizle
-        cleaned_text = response.replace("ContentBlock(text='", "").replace("', type='text')", "")
-        # Escape karakterlerini düzelt
-        cleaned_text = cleaned_text.replace("\\n", "\n").replace("\\t", "\t")
+        # Content Block ve diğer gereksiz metinleri temizle
+        text = response
+        if "ContentBlock(text=" in text:
+            text = text.split("ContentBlock(text=")[1]
+            text = text.rsplit(", type='text')", 1)[0]
+            text = text.strip('"')
+            text = text.strip("'")
+        
+        # Escape karakterlerini düzgün boşluklara çevir
+        text = text.replace("\\n", "\n")
+        text = text.replace("\\t", "    ")
+        
+        # Başlıkları düzenle
+        lines = text.split("\n")
+        formatted_lines = []
+        
+        for line in lines:
+            # Başlıkları vurgula
+            if line.isupper() or (line.strip() and line.strip()[0] == '#'):
+                formatted_lines.extend(["", "### " + line.strip('# '), ""])
+            # Liste öğelerini düzenle
+            elif line.strip().startswith('*'):
+                formatted_lines.append(line)
+            # Normal metni ekle
+            elif line.strip():
+                formatted_lines.append(line)
+        
+        # Fazla boş satırları temizle ve metni birleştir
+        final_text = "\n".join(formatted_lines)
+        final_text = "\n".join(line for line, _ in itertools.groupby(final_text.splitlines()))
+        
+        return final_text
         
         return cleaned_text
 
