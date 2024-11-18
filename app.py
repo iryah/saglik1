@@ -5,41 +5,68 @@ class AIAssistant:
     def __init__(self):
         self.client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
     
-    def format_response(self, response):
-        # Content Block ve diğer gereksiz metinleri temizle
-        text = response
-        if "ContentBlock(text=" in text:
-            text = text.split("ContentBlock(text=")[1]
-            text = text.rsplit(", type='text')", 1)[0]
-            text = text.strip('"')
-            text = text.strip("'")
-        
-        # Escape karakterlerini düzgün boşluklara çevir
-        text = text.replace("\\n", "\n")
-        text = text.replace("\\t", "    ")
-        
-        # Başlıkları düzenle
-        lines = text.split("\n")
-        formatted_lines = []
-        
-        for line in lines:
-            # Başlıkları vurgula
-            if line.isupper() or (line.strip() and line.strip()[0] == '#'):
-                formatted_lines.extend(["", "### " + line.strip('# '), ""])
-            # Liste öğelerini düzenle
-            elif line.strip().startswith('*'):
-                formatted_lines.append(line)
-            # Normal metni ekle
-            elif line.strip():
-                formatted_lines.append(line)
-        
-        # Fazla boş satırları temizle ve metni birleştir
-        final_text = "\n".join(formatted_lines)
-        final_text = "\n".join(line for line, _ in itertools.groupby(final_text.splitlines()))
-        
-        return final_text
-        
-        return cleaned_text
+ def format_response(self, response):
+    # Gereksiz metinleri temizle
+    text = response
+    if "ContentBlock(text=" in text:
+        text = text.split("ContentBlock(text=")[1]
+        text = text.rsplit(", type='text')", 1)[0]
+        text = text.strip('"').strip("'")
+    
+    # HTML tablo formatına dönüştür
+    html = """
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg overflow-hidden">
+            <thead class="bg-blue-600 text-white">
+                <tr>
+                    <th class="px-4 py-2 text-left">Başlık</th>
+                    <th class="px-4 py-2 text-left">Detay</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    current_title = ""
+    current_content = []
+    
+    lines = text.split("\\n")
+    for line in lines:
+        line = line.strip()
+        if line.startswith('#'):
+            # Önceki başlığı ekle
+            if current_title and current_content:
+                content_html = "<br>".join(current_content)
+                html += f"""
+                <tr class="border-b">
+                    <td class="px-4 py-2 font-semibold bg-gray-50">{current_title}</td>
+                    <td class="px-4 py-2">{content_html}</td>
+                </tr>
+                """
+            current_title = line.strip('# ')
+            current_content = []
+        elif line.strip():
+            if line.startswith('*'):
+                current_content.append(f"• {line.strip('* ')}")
+            else:
+                current_content.append(line)
+    
+    # Son başlığı ekle
+    if current_title and current_content:
+        content_html = "<br>".join(current_content)
+        html += f"""
+        <tr class="border-b">
+            <td class="px-4 py-2 font-semibold bg-gray-50">{current_title}</td>
+            <td class="px-4 py-2">{content_html}</td>
+        </tr>
+        """
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    return html
 
     def get_prompt(self, service_type, user_input):
         prompts = {
