@@ -10,76 +10,54 @@ class AIAssistant:
         self.client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
     
     def format_response(self, response):
-        # Clean the text
-        text = response
-        if "ContentBlock(text=" in text:
-            text = text.split("ContentBlock(text=")[1]
-            text = text.rsplit(", type='text')", 1)[0]
-            text = text.strip('"').strip("'")
-        
-        text = text.replace("\\n", "\n").replace("\\t", "\t")
-        
-        # Create table HTML
-        html = """
-        <div class="overflow-x-auto my-4">
-            <table class="min-w-full divide-y divide-gray-200 rounded-lg">
-                <tbody class="bg-white divide-y divide-gray-200">
-        """
-        
-        current_section = None
-        current_content = []
-        
-        for line in text.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-                
-            # Handle headers (lines starting with # or in ALL CAPS)
-            if line.startswith('#') or line.isupper():
-                # Add previous section if exists
-                if current_section:
-                    content_html = "<br>".join(f"<div class='my-1'>{item}</div>" for item in current_content)
-                    html += f"""
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap bg-gray-50 w-1/4">
-                                <div class="font-semibold text-gray-900">{current_section}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-gray-900">{content_html}</div>
-                            </td>
-                        </tr>
-                    """
-                
-                current_section = line.strip('# ')
-                current_content = []
+    # Temizleme işlemi
+    text = response
+    if "ContentBlock(text=" in text:
+        text = text.split("ContentBlock(text=")[1]
+        text = text.rsplit(", type='text')", 1)[0]
+        text = text.strip('"').strip("'")
+    
+    text = text.replace("\\n", "\n")
+    
+    # Kartlı görünüm oluştur
+    html = '<div class="space-y-4">'  # Kartlar arası boşluk
+    
+    sections = []
+    current_section = {"title": "", "content": []}
+    
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
             
-            # Handle bullet points and regular content
-            elif line:
-                if line.startswith('*'):
-                    line = f"• {line.strip('* ')}"
-                current_content.append(line)
-        
-        # Add last section
-        if current_section and current_content:
-            content_html = "<br>".join(f"<div class='my-1'>{item}</div>" for item in current_content)
-            html += f"""
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap bg-gray-50 w-1/4">
-                        <div class="font-semibold text-gray-900">{current_section}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-gray-900">{content_html}</div>
-                    </td>
-                </tr>
-            """
-        
-        html += """
-                </tbody>
-            </table>
-        </div>
+        if line.startswith('#') or line.isupper():
+            if current_section["title"]:
+                sections.append(current_section)
+                current_section = {"title": "", "content": []}
+            current_section["title"] = line.strip('# ')
+        else:
+            if line.startswith('*'):
+                line = f"• {line.strip('* ')}"
+            current_section["content"].append(line)
+    
+    if current_section["title"]:
+        sections.append(current_section)
+    
+    # Her bölüm için kart oluştur
+    for section in sections:
+        html += f"""
+            <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                <div class="text-lg font-bold text-blue-600 mb-3">
+                    {section["title"]}
+                </div>
+                <div class="text-gray-700 space-y-2">
+                    {"<br>".join(f'<div class="ml-4">{line}</div>' for line in section["content"])}
+                </div>
+            </div>
         """
-        
-        return html
+    
+    html += '</div>'
+    return html
 
     def get_prompt(self, service_type, user_input):
         prompts = {
