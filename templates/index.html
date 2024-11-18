@@ -3,194 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Asistan</title>
+    <title>Sağlık Asistanı</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .loading-pulse {
-            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .5; }
-        }
-
-        /* Markdown benzeri stil için */
-        .markdown-style h1 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
-            color: #1a365d;
-        }
-        .markdown-style h2 {
-            font-size: 1.25rem;
-            font-weight: bold;
-            margin-top: 1.25rem;
-            margin-bottom: 0.75rem;
-            color: #2c5282;
-        }
-        .markdown-style p {
-            margin-bottom: 0.75rem;
-            line-height: 1.6;
-        }
-        .markdown-style ul {
-            list-style-type: disc;
-            margin-left: 1.5rem;
-            margin-bottom: 0.75rem;
-        }
-        .markdown-style code {
-            background-color: #f7fafc;
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.25rem;
-            font-family: monospace;
-        }
-    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-  <header class="text-center mb-12">
-    <h1 class="text-4xl font-bold text-gray-800 mb-2">Sağlık AI Asistanı</h1>
-    <p class="text-gray-600 max-w-2xl mx-auto">
-        Yapay zeka destekli sağlık asistanınız. Semptom analizi, ruh sağlığı değerlendirmesi, 
-        beslenme danışmanlığı ve sağlıklı yaşam önerileri için yanınızdayız.
-    </p>
-</header>
-
-        <!-- Ana İçerik -->
-        <div class="max-w-4xl mx-auto">
-            <!-- Form Kartı -->
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-                <!-- Hizmet Seçimi -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Hizmet Seçin
-                    </label>
-                 <select id="serviceType" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-    <option value="symptom_analysis">🏥 Semptom Analizi</option>
-    <option value="mental_health">🧠 Ruh Sağlığı Değerlendirmesi</option>
-    <option value="nutrition">🥗 Beslenme Danışmanlığı</option>
-    <option value="medical_research">🔬 Sağlık Araştırması</option>
-    <option value="health_tips">💪 Sağlıklı Yaşam Önerileri</option>
-</select>
-                </div>
-
-                <!-- Durum Açıklaması -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Detaylı Açıklama
-                    </label>
-                    <textarea 
-                        id="userInput" 
-                        rows="5" 
-                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        placeholder="Seçtiğiniz hizmet tipine göre detaylı açıklama yapın..."></textarea>
-                </div>
-
-                <!-- Gönder Butonu -->
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-center mb-8">Sağlık Asistanı</h1>
+        
+        <div class="max-w-2xl mx-auto">
+            <div id="question-container" class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <p id="current-question" class="text-lg mb-4">Şikayetinizi kısaca anlatır mısınız?</p>
+                <textarea 
+                    id="answer-input"
+                    class="w-full p-3 border rounded-lg mb-4"
+                    rows="4"
+                    placeholder="Cevabınızı buraya yazın..."></textarea>
                 <button 
-                    onclick="generateResponse()" 
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-                    <span>Analiz Et</span>
+                    onclick="submitAnswer()"
+                    class="w-full bg-blue-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                    İleri
                 </button>
             </div>
 
-            <!-- Yükleniyor -->
-            <div id="loading" class="hidden">
-                <div class="flex flex-col items-center justify-center p-8">
-                    <div class="loading-pulse">
-                        <svg class="animate-spin h-12 w-12 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </div>
-                    <p class="mt-4 text-gray-600">AI asistanınız yanıtı hazırlıyor...</p>
-                </div>
-            </div>
-
-            <!-- Sonuç -->
-            <div id="response" class="hidden">
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Analiz Sonucu</h2>
-        <div id="responseContent" class="prose max-w-none"></div>
-    </div>
-</div>
-            </div>
+            <div id="response-container" class="hidden"></div>
         </div>
     </div>
 
     <script>
-    async function generateResponse() {
-        const loading = document.getElementById('loading');
-        const responseDiv = document.getElementById('response');
-        const responseContent = document.getElementById('responseContent');
-        const serviceType = document.getElementById('serviceType').value;
-        const userInput = document.getElementById('userInput').value;
+        async function submitAnswer() {
+            const answer = document.getElementById('answer-input').value;
+            if (!answer.trim()) {
+                alert('Lütfen bir cevap girin');
+                return;
+            }
 
-        if (!userInput.trim()) {
-            alert('Lütfen detaylı açıklama yapın');
-            return;
-        }
-
-        try {
-            // UI'ı hazırla
-            loading.classList.remove('hidden');
-            responseDiv.classList.add('hidden');
-            responseContent.textContent = '';
-
-            const response = await fetch('/api/service', {
+            const response = await fetch('/api/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    service_type: serviceType,
-                    input: userInput
-                })
+                body: JSON.stringify({ answer })
             });
 
-            const data = await response.json();
-
-            if (data.success) {
-                // Markdown formatlama
-                responseContent.innerHTML = formatMarkdown(data.response);
-                responseDiv.classList.remove('hidden');
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('answer-input').value = '';
+                
+                if (result.is_final) {
+                    document.getElementById('question-container').classList.add('hidden');
+                    document.getElementById('response-container').classList.remove('hidden');
+                    document.getElementById('response-container').innerHTML = result.response;
+                } else {
+                    document.getElementById('current-question').textContent = result.question;
+                }
             } else {
-                throw new Error(data.error || 'Bir hata oluştu');
+                alert('Bir hata oluştu: ' + result.error);
             }
-        } catch (error) {
-            alert(`Üzgünüm, bir hata oluştu: ${error.message}`);
-        } finally {
-            loading.classList.add('hidden');
         }
-    }
-
-    function formatMarkdown(text) {
-        return text
-            .replace(/# (.*)/g, '<h1>$1</h1>')
-            .replace(/## (.*)/g, '<h2>$1</h2>')
-            .replace(/\* (.*)/g, '<li>$1</li>')
-            .replace(/`(.*?)`/g, '<code>$1</code>')
-            .replace(/\n/g, '<br>');
-    }
-
-    // Textarea'da Enter tuşuyla gönderme
-    document.getElementById('userInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-            generateResponse();
-        }
-    });
-
-    // Hizmet tipine göre placeholder güncelleme
-    document.getElementById('serviceType').addEventListener('change', function(e) {
-        const placeholders = {
-            'analysis': 'Analiz edilecek veri veya konuyu detaylı açıklayın...',
-            'writing': 'Oluşturulacak içeriğin konusu ve gereksinimlerini belirtin...',
-            'coding': 'Çözülmesi gereken problemi veya geliştirmek istediğiniz kodu açıklayın...',
-            'translation': 'Çevrilmesini istediğiniz metni girin...',
-            'research': 'Araştırılmasını istediğiniz konuyu ve kapsamı belirtin...'
-        };
-        document.getElementById('userInput').placeholder = placeholders[e.target.value] || 'Detaylı açıklama yapın...';
-    });
     </script>
 </body>
 </html>
